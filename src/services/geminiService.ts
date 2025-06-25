@@ -17,8 +17,8 @@ export class GeminiAIService {
   private maxRetries: number = 3;
 
   constructor() {
-    this.apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
-    this.baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
+    this.apiKey = import.meta.env.GOOGLE_API_KEY;
+    this.baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent';
     
     // Check if API key is properly configured
     if (!this.apiKey || this.apiKey === 'your_google_api_key_here') {
@@ -29,7 +29,7 @@ export class GeminiAIService {
   private async makeRequest(payload: any, timeout = this.defaultTimeout): Promise<any> {
     // Check if API key is configured before making request
     if (!this.apiKey || this.apiKey === 'your_google_api_key_here') {
-      throw new Error('Google Gemini API key not configured. Please set VITE_GOOGLE_API_KEY in your .env file with a valid Google API key.');
+      throw new Error('Google Gemini API key not configured. Please set GOOGLE_API_KEY in your .env file with a valid Google API key.');
     }
 
     const controller = new AbortController();
@@ -62,12 +62,12 @@ export class GeminiAIService {
       return data;
     } catch (error) {
       clearTimeout(timeoutId);
-      
-      if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+      const e = error as Error;
+      if (e.name === 'AbortError' || e.name === 'TimeoutError') {
         throw new Error('Request timed out - Gemini 2.5 Flash analysis taking longer than expected');
       }
       
-      throw error;
+      throw e;
     }
   }
 
@@ -80,15 +80,16 @@ export class GeminiAIService {
         const timeout = 180000 * attempt; // 3min, 6min, 9min
         return await this.makeRequest(payload, timeout);
       } catch (error) {
-        console.warn(`⚠️ Gemini 2.5 Flash Attempt ${attempt} failed:`, error.message);
+        const e = error as Error;
+        console.warn(`⚠️ Gemini 2.5 Flash Attempt ${attempt} failed:`, e.message);
         
         // If it's an authentication error, don't retry
-        if (error.message.includes('Authentication failed') || error.message.includes('not configured')) {
-          throw error;
+        if (e.message.includes('Authentication failed') || e.message.includes('not configured')) {
+          throw e;
         }
         
         if (attempt === maxRetries) {
-          throw new Error(`All ${maxRetries} Gemini 2.5 Flash attempts failed: ${error.message}`);
+          throw new Error(`All ${maxRetries} Gemini 2.5 Flash attempts failed: ${e.message}`);
         }
         
         // Exponential backoff: wait 5s, 10s, 20s
@@ -223,9 +224,10 @@ Please provide a comprehensive response to my prompt above, considering my perso
       
       throw new Error('No response from Gemini 2.5 Flash user-prompt analysis');
     } catch (error) {
-      console.error('❌ Gemini 2.5 Flash user-prompt analysis error:', error);
+      const e = error as Error;
+      console.error('❌ Gemini 2.5 Flash user-prompt analysis error:', e);
       
-      if (error.message.includes('Authentication failed') || error.message.includes('not configured')) {
+      if (e.message.includes('Authentication failed') || e.message.includes('not configured')) {
         return `# ⚠️ **Configuration Required**
 
 To use the AI fashion consultant, you need to configure your Google API Key:
@@ -256,7 +258,7 @@ While you set up the API key, here are some general fashion tips based on curren
 Once configured, you'll get personalized, comprehensive fashion analysis powered by Google Gemini 2.5 Flash!`;
       }
       
-      if (error.message.includes('timed out')) {
+      if (e.message.includes('timed out')) {
         console.warn('⏰ Gemini 2.5 Flash analysis timed out, providing comprehensive fallback');
       }
       
@@ -768,15 +770,25 @@ This comprehensive fashion consultation provides maximum guidance for your compl
   }
 
   async analyzeFashionTrends(category: string, season: string = 'current'): Promise<TrendData> {
-    // Simplified trend data for compatibility
-    return {
-      category,
-      trendingItems: [],
-      popularity: 90,
-      seasonality: 85,
-      socialMentions: 2500,
-      updatedAt: new Date()
-    };
+    const prompt = `Analyze current fashion trends for ${category} for the ${season} season. Provide a concise summary, key colors, fabrics, and 3-5 emerging trend predictions. Format as JSON: {"summary": "", "key_colors": [], "fabrics": [], "predictions": []}`;
+    try {
+      const data = await this.makeRequestWithRetry({ contents: [{ parts: [{ text: prompt }] }] });
+      if (data.candidates && data.candidates.length > 0 && data.candidates[0].content.parts.length > 0) {
+        const trendData = JSON.parse(data.candidates[0].content.parts[0].text);
+        return trendData as TrendData;
+      }
+      throw new Error('Failed to analyze fashion trends.');
+    } catch (error) {
+      console.error('Error analyzing fashion trends:', error);
+      return { 
+        category: category, 
+        trendingItems: [], 
+        popularity: 0, 
+        seasonality: 0, 
+        socialMentions: 0, 
+        updatedAt: new Date() 
+      };
+    }
   }
 
   async generateStyleAdvice(
@@ -788,29 +800,16 @@ This comprehensive fashion consultation provides maximum guidance for your compl
   }
 
   async analyzeImageForStyle(imageDescription: string): Promise<string> {
-    const prompt = `Analyze this fashion image and provide comprehensive styling insights: "${imageDescription}"`;
-    
+    const prompt = `Based on this image description, provide fashion and style analysis: "${imageDescription}". Focus on item identification, style genre, and potential outfit pairings.`;
     try {
-      const payload = this.buildUserPromptDrivenPayload(prompt, {
-        style: ['trendy'],
-        colors: ['neutral'],
-        sizes: {},
-        budget: { min: 1000, max: 5000 },
-        occasions: ['casual'],
-        gender: 'unisex',
-        age: 25,
-        brandPreferences: []
-      });
-      
-      const data = await this.makeRequestWithRetry(payload);
-      
-      if (data.candidates && data.candidates.length > 0 && data.candidates[0].content?.parts?.length > 0) {
+      const data = await this.makeRequestWithRetry({ contents: [{ parts: [{ text: prompt }] }] });
+      if (data.candidates && data.candidates.length > 0 && data.candidates[0].content.parts.length > 0) {
         return data.candidates[0].content.parts[0].text;
       }
-      
-      throw new Error('No response from Gemini 2.5 Flash image analysis');
+      throw new Error('Failed to analyze image for style.');
     } catch (error) {
-      return '🎨 **Image Style Analysis**: Your image shows great fashion potential! The visual elements suggest a well-coordinated aesthetic with contemporary appeal. Consider exploring similar styles in current collections from major fashion retailers. The composition indicates good understanding of color coordination and styling principles.';
+      console.error('Error analyzing image for style:', error);
+      return 'Could not analyze the image style at this time.';
     }
   }
 }

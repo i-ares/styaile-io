@@ -69,6 +69,14 @@ export interface ChatMessage {
   timestamp: Date;
   recommendations?: Recommendation[] | RecommendationCard[];
   image?: string;
+  advice?: FashionAdvice;
+}
+
+export interface FashionAdvice {
+  complementary_items: string[];
+  outfits: string[];
+  occasions: string[];
+  styling_tips: string[];
 }
 
 export interface TrendData {

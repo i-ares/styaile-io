@@ -3,6 +3,11 @@ from flask_cors import CORS
 from fashion_recommender import FashionRecommender
 import json
 import traceback
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 # Configure CORS with more specific settings
@@ -15,7 +20,10 @@ CORS(app, resources={
 })
 
 # Initialize the fashion recommender
-recommender = FashionRecommender("AIzaSyBpRah5mKs45mEOIpGoFTKMQjHtgfIVD7g")
+api_key = os.getenv("GOOGLE_API_KEY")
+if not api_key:
+    raise ValueError("GOOGLE_API_KEY not found in environment. Please set it in your .env file.")
+recommender = FashionRecommender(api_key)
 
 @app.route('/test', methods=['GET'])
 def test():

@@ -5,6 +5,7 @@ import { useAppStore } from '../../store/appStore';
 import { EnhancedChatService } from '../../services/enhancedChatService';
 import type { ChatMessage, Product } from '../../types';
 import toast from 'react-hot-toast';
+import AdviceCard from './AdviceCard';
 
 interface CleanProductCard {
   id: string;
@@ -27,7 +28,7 @@ export function ChatInterface({ initialUserMessage }: { initialUserMessage?: str
     if (initialUserMessage && messages.filter(m => m.type === 'user').length === 0) {
       setInput(initialUserMessage);
       setTimeout(() => {
-        handleSendMessage();
+        handleSendMessageRef.current();
       }, 300);
     }
     // eslint-disable-next-line
@@ -79,7 +80,7 @@ export function ChatInterface({ initialUserMessage }: { initialUserMessage?: str
   };
 
   const handleSendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return;
 
     const userMessage: ChatMessage = {
       id: `msg-${Date.now()}`,
@@ -87,74 +88,66 @@ export function ChatInterface({ initialUserMessage }: { initialUserMessage?: str
       content: input,
       timestamp: new Date()
     };
-
     addMessage(userMessage);
+
     const userInput = input;
     setInput('');
     setIsLoading(true);
-    setIsSearching(true);
-
+    
     try {
-      console.log('🔍 Searching for unique products with real shopping links...');
-      
-      toast.loading('🔍 Finding unique products with real shopping links...', { id: 'search-toast' });
-      
-      const result = await enhancedChatService.processUserMessage(
-        userInput,
-        preferences!,
-        currentProduct
-      );
+      const response = await fetch('http://127.0.0.1:5000/get_recommendations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: userInput,
+          // You can pass more context from your app store if needed
+          brand: currentProduct?.brand || '',
+          category: currentProduct?.category || '',
+          price: currentProduct?.price || 0
+        })
+      });
 
-      toast.dismiss('search-toast');
-
-      // Extract all unique products from all cards
-      const allProducts: Product[] = [];
-      const seenUrls = new Set<string>();
-      
-      for (const card of result.recommendationCards) {
-        for (const product of card.products) {
-          // Check for unique URLs only
-          const normalizedUrl = normalizeUrl(product.url);
-          if (!seenUrls.has(normalizedUrl)) {
-            seenUrls.add(normalizedUrl);
-            allProducts.push({
-              ...product,
-              platform: determinePlatformFromUrl(product.url) // Fix platform badging
-            });
-          }
-        }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const assistantMessage: ChatMessage = {
-        id: `msg-${Date.now()}-products`,
-        type: 'assistant',
-        content: '',
-        timestamp: new Date(),
-        recommendations: [
-          {
-            id: 'unique-products',
-            products: allProducts
-          }
-        ] as any
-      };
-
-      addMessage(assistantMessage);
+      const data = await response.json();
       
-      if (allProducts.length > 0) {
-        toast.success(`✅ Found ${allProducts.length} unique products with real shopping links!`);
+      if (data.success && data.recommendations) {
+        const assistantMessage: ChatMessage = {
+          id: `msg-${Date.now()}-recs`,
+          type: 'assistant',
+          content: `Here are some recommendations for "${userInput}":`,
+          timestamp: new Date(),
+          advice: data.recommendations,
+        };
+        addMessage(assistantMessage);
       } else {
-        toast.success('✅ Search complete! Try asking for specific fashion items.');
+        throw new Error(data.error || 'Failed to get recommendations from server.');
       }
-      
+
     } catch (error) {
-      console.error('Error in product search:', error);
-      toast.dismiss('search-toast');
-      toast.error('Search temporarily unavailable. Please try again.');
+      console.error("Error fetching recommendations:", error);
+      const err = error as Error;
+      addMessage({
+        id: `err-${Date.now()}`,
+        type: 'assistant',
+        content: `Sorry, I couldn't get recommendations. Error: ${err.message}`,
+        timestamp: new Date()
+      });
+      toast.error("Could not connect to the recommendation service.");
     } finally {
       setIsLoading(false);
-      setIsSearching(false);
     }
   };
+
+  // Create a ref to hold the latest version of handleSendMessage
+  const handleSendMessageRef = useRef(handleSendMessage);
+  useEffect(() => {
+    handleSendMessageRef.current = handleSendMessage;
+  }, [handleSendMessage]);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -179,7 +172,7 @@ export function ChatInterface({ initialUserMessage }: { initialUserMessage?: str
           const result = await enhancedChatService.processUserMessage(
             'Find fashion products similar to uploaded image',
             preferences!,
-            currentProduct
+            currentProduct || undefined
           );
           
           const allProducts: Product[] = [];
@@ -249,115 +242,43 @@ export function ChatInterface({ initialUserMessage }: { initialUserMessage?: str
           key={product.id}
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white border border-gray-100 hover:border-gray-200 transition-all duration-500 overflow-hidden group"
-          whileHover={{ y: -5 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-subtle overflow-hidden group border border-gray-200/80 dark:border-gray-700/60"
         >
-          {/* Product Image */}
-          <div className="relative h-80 overflow-hidden">
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              onError={(e) => {
-                e.currentTarget.src = 'https://images.pexels.com/photos/7679720/pexels-photo-7679720.jpeg?auto=compress&cs=tinysrgb&w=400';
-              }}
-            />
-            
-            {/* Platform Badge */}
-            <div className={`absolute top-4 left-4 px-3 py-1 text-xs font-light tracking-wide text-white ${
-              product.platform === 'flipkart' ? 'bg-yellow-600' :
-              product.platform === 'amazon' ? 'bg-blue-600' :
-              product.platform === 'myntra' ? 'bg-pink-600' :
-              'bg-gray-600'
-            }`}>
-              {product.platform.charAt(0).toUpperCase() + product.platform.slice(1)}
+          <div className="relative h-64 overflow-hidden">
+            <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            <div className="absolute top-2 right-2 flex gap-2">
+              <button className="bg-white/20 backdrop-blur-sm text-white rounded-full p-2 hover:bg-white/30 transition-colors">
+                <Heart size={18} />
+              </button>
+              <button className="bg-white/20 backdrop-blur-sm text-white rounded-full p-2 hover:bg-white/30 transition-colors">
+                <Share size={18} />
+              </button>
             </div>
-
-            {/* Discount Badge */}
-            {product.originalPrice && product.originalPrice > product.price && (
-              <div className="absolute top-4 right-4 px-3 py-1 text-xs font-medium text-white bg-black">
-                -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-              </div>
-            )}
-
-            {/* Quick Actions */}
-            <div className="absolute bottom-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-              <motion.button
-                onClick={() => {/* Add to wishlist */}}
-                className="p-3 bg-white/90 backdrop-blur-sm text-gray-700 hover:text-red-500 transition-colors duration-300 shadow-sm"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <Heart className="w-4 h-4" />
-              </motion.button>
-              
-              <motion.button
-                onClick={() => navigator.share?.({ title: product.name, url: product.url })}
-                className="p-3 bg-white/90 backdrop-blur-sm text-gray-700 hover:text-blue-500 transition-colors duration-300 shadow-sm"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <Share className="w-4 h-4" />
-              </motion.button>
+            <div className={`absolute top-2 left-2`}>
+              <img src={`/logos/${product.platform}-logo.png`} alt={product.platform} className="w-12 h-auto rounded-md" />
             </div>
           </div>
-
-          {/* Product Info */}
-          <div className="p-6">
-            <h3 className="font-light text-black line-clamp-2 text-base mb-3 tracking-wide">
-              {product.name}
-            </h3>
-            
-            <div className="flex items-center space-x-3 mb-3">
-              <span className="text-lg font-light text-black">
-                ₹{product.price.toLocaleString()}
-              </span>
-              {product.originalPrice && product.originalPrice > product.price && (
-                <span className="text-sm text-gray-500 line-through">
-                  ₹{product.originalPrice.toLocaleString()}
-                </span>
-              )}
-            </div>
-
-            {/* Rating */}
-            {product.rating && (
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="flex items-center">
-                  {[...Array(5)].map((_, i) => (
-                    <Star 
-                      key={i} 
-                      className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
-                    />
-                  ))}
-                </div>
-                {product.reviews && (
-                  <span className="text-xs text-gray-500">
-                    ({product.reviews.toLocaleString()})
-                  </span>
-                )}
+          <div className="p-5">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white truncate group-hover:text-fuchsia-600 transition-colors">{product.name}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{product.brand}</p>
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-xl font-bold text-gray-900 dark:text-white">₹{formatPrice(product.price ?? 0)}</p>
+              <div className="flex items-center gap-1 text-amber-400">
+                <Star size={16} className="fill-current" />
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{product.rating?.toFixed(1) || '4.5'}</span>
               </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex space-x-3">
-              <motion.button
-                onClick={() => window.open(product.affiliateLink || product.url, '_blank')}
-                className="flex-1 bg-black text-white py-3 px-4 text-sm font-light tracking-wide hover:bg-gray-800 transition-colors duration-300 flex items-center justify-center space-x-2"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <ShoppingCart className="w-4 h-4" />
-                <span>BUY NOW</span>
-              </motion.button>
-              
-              <motion.button
-                onClick={() => window.open(product.url, '_blank')}
-                className="px-4 border border-gray-200 text-gray-700 py-3 hover:bg-gray-50 transition-colors duration-300 flex items-center justify-center"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <ExternalLink className="w-4 h-4" />
-              </motion.button>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <a href={product.url} target="_blank" rel="noopener noreferrer" className="flex-1 bg-fuchsia-600 text-white font-semibold py-2 px-4 rounded-lg text-center text-sm hover:bg-fuchsia-700 transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center gap-2">
+                <ShoppingCart size={16} />
+                Buy Now
+              </a>
+              <a href={product.url} target="_blank" rel="noopener noreferrer" className="flex-1 bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg text-center text-sm hover:bg-gray-300 transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center gap-2">
+                <ExternalLink size={16} />
+                Visit
+              </a>
             </div>
           </div>
         </motion.div>
@@ -365,125 +286,70 @@ export function ChatInterface({ initialUserMessage }: { initialUserMessage?: str
     </div>
   );
 
+  const formatPrice = (price: number): string => {
+    return price.toLocaleString();
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-12rem)]">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-8 space-y-8">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
         <AnimatePresence>
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <motion.div
               key={message.id}
-              initial={{ opacity: 0, y: 30 }}
+              layout
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
-              className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div className={`max-w-4xl w-full ${
-                message.type === 'user' ? 'ml-auto' : 'mr-auto'
-              }`}>
-                <div className={`flex items-start space-x-4 ${
-                  message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
-                }`}>
-                  {/* Avatar */}
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 ${
-                    message.type === 'user'
-                      ? 'bg-black text-white'
-                      : 'bg-gray-100 text-gray-600'
-                  }`}>
-                    {message.type === 'user' ? (
-                      <User className="w-5 h-5" />
-                    ) : (
-                      <Bot className="w-5 h-5" />
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1">
-                    {/* User message */}
-                    {message.type === 'user' && message.content && (
-                      <div className="bg-black text-white px-8 py-6 mb-6">
-                        {message.image && (
-                          <div className="mb-4">
-                            <img
-                              src={message.image}
-                              alt="Uploaded"
-                              className="max-w-full h-64 object-cover"
-                            />
-                          </div>
-                        )}
-                        <div className="text-sm font-light whitespace-pre-line leading-relaxed tracking-wide">
-                          {message.content}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Product Cards */}
-                    {message.recommendations && message.recommendations.length > 0 && (
-                      <div className="w-full">
-                        {message.recommendations.map((rec: any) => (
-                          rec.products && rec.products.length > 0 && (
-                            <div key={rec.id}>
-                              <div className="flex items-center space-x-3 mb-6">
-                                <Sparkles className="w-5 h-5 text-gray-600" />
-                                <span className="text-lg font-light tracking-wide text-black">
-                                  {rec.products.length} Products Found
-                                </span>
-                              </div>
-                              <ProductGrid products={rec.products} />
-                            </div>
-                          )
-                        ))}
-                      </div>
-                    )}
-                  </div>
+              {message.type === 'assistant' && (
+                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                  <Bot size={18} />
                 </div>
+              )}
+              <div className={`max-w-md lg:max-w-lg ${message.type === 'user' ? 'order-2' : ''}`}>
+                <div className={`
+                  px-4 py-3 rounded-2xl
+                  ${message.type === 'user' 
+                    ? 'bg-black text-white rounded-br-none' 
+                    : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-bl-none'
+                  }
+                `}>
+                  {message.content && <p className="text-sm">{message.content}</p>}
+                  {message.image && (
+                    <div className="mt-2">
+                      <img src={message.image} alt="uploaded content" className="max-w-xs rounded-lg" />
+                    </div>
+                  )}
+                  
+                  {message.recommendations && (
+                    <div className="mt-6">
+                      {(message.recommendations as any[]).map(card => (
+                        card.products ? <ProductGrid key={card.id} products={card.products} /> : null
+                      ))}
+                    </div>
+                  )}
+                  {message.advice && <AdviceCard advice={message.advice} />}
 
-                {/* Timestamp */}
-                <p className={`text-xs text-gray-500 mt-3 ${
-                  message.type === 'user' ? 'text-right' : 'text-left'
-                }`}>
-                  {message.timestamp.toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
-                </p>
+                </div>
+                <p className="text-xs text-gray-400 mt-1 px-2">{new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
               </div>
+              {message.type === 'user' && (
+                <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white">
+                  <User size={18} />
+                </div>
+              )}
             </motion.div>
           ))}
         </AnimatePresence>
-
-        {/* Loading */}
-        {isLoading && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-start"
-          >
-            <div className="flex items-start space-x-4">
-              <div className="w-10 h-10 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center shadow-sm">
-                <Bot className="w-5 h-5" />
-              </div>
-              <div className="bg-white border border-gray-200 px-8 py-6">
-                <div className="flex items-center space-x-3">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                  </div>
-                  <span className="text-sm font-light text-gray-600 tracking-wide">
-                    {isSearching ? 'Searching for products...' : 'Processing...'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-gray-200 p-8">
+      <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
         <div className="flex items-center space-x-4">
           <input
             ref={fileInputRef}

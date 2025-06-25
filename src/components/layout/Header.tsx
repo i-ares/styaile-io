@@ -23,17 +23,17 @@ export function Header() {
 
   return (
     <>
-      <motion.header 
+    <motion.header 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
           isHomePage ? 'bg-transparent' : 'bg-white/95 backdrop-blur-xl border-b border-gray-100'
         }`}
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-      >
+    >
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            <motion.button 
+            <motion.button
               onClick={() => handleNavigation('/')}
               className={`text-2xl font-extralight tracking-[0.2em] transition-colors duration-300 ${
                 isHomePage ? 'text-white hover:text-gray-300' : 'text-black hover:text-gray-600'
@@ -44,29 +44,29 @@ export function Header() {
               STAILE.IO
             </motion.button>
             <div className="hidden lg:flex items-center space-x-12">
-              <motion.button
-                onClick={() => handleNavigation('/chat')}
+            <motion.button
+              onClick={() => handleNavigation('/chat')}
                 className={`text-sm font-light tracking-[0.1em] uppercase transition-colors duration-300 ${
-                  location.pathname === '/chat' 
+                location.pathname === '/chat' 
                     ? (isHomePage ? 'text-white border-b border-white' : 'text-black border-b border-black')
                     : (isHomePage ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-black')
-                }`}
+              }`}
                 whileHover={{ y: -1 }}
-              >
+            >
                 AI Assistant
-              </motion.button>
-              <motion.button
-                onClick={() => handleNavigation('/recommendations')}
+            </motion.button>
+            <motion.button
+              onClick={() => handleNavigation('/recommendations')}
                 className={`text-sm font-light tracking-[0.1em] uppercase transition-colors duration-300 ${
-                  location.pathname === '/recommendations' 
+                location.pathname === '/recommendations' 
                     ? (isHomePage ? 'text-white border-b border-white' : 'text-black border-b border-black')
                     : (isHomePage ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-black')
-                }`}
+              }`}
                 whileHover={{ y: -1 }}
-              >
+            >
                 Collections
-              </motion.button>
-            </div>
+            </motion.button>
+          </div>
             <div className="flex items-center space-x-6">
               <div className={`hidden md:flex items-center space-x-2 text-sm font-light tracking-wide ${
                 isHomePage ? 'text-white/80' : 'text-gray-600'
@@ -74,15 +74,15 @@ export function Header() {
                 <Globe className="w-4 h-4" />
                 <span>IN (INR ₹)</span>
               </div>
-              <motion.button
+            <motion.button
                 className={`p-2 transition-colors duration-300 ${
                   isHomePage ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-black'
                 }`}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
                 <Search className="w-5 h-5" />
-              </motion.button>
+            </motion.button>
               {isAuthenticated && user ? (
                 <motion.div 
                   className="flex items-center space-x-2"
@@ -153,7 +153,7 @@ export function Header() {
         transition={{ duration: 0.3 }}
         className="fixed inset-0 z-40 bg-white lg:hidden"
         style={{ top: '80px' }}
-      >
+          >
         <div className="px-6 py-8 space-y-8">
           <motion.button
             onClick={() => handleNavigation('/chat')}

@@ -1,6 +1,8 @@
 import google.generativeai as genai
 import json
 import time
+from dotenv import load_dotenv
+import os
 
 class FashionRecommender:
     def __init__(self, api_key):
@@ -14,7 +16,7 @@ class FashionRecommender:
             "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_NONE",
         }
         # Use the latest stable model
-        self.model = genai.GenerativeModel('models/gemma-3-27b-it', safety_settings=safety_settings)
+        self.model = genai.GenerativeModel('models/gemini-1.5-flash-latest', safety_settings=safety_settings)
 
     def generate_prompt(self, product_info):
         """Generate a prompt for the product model based on product information."""
@@ -213,7 +215,11 @@ Focus on practical, specific recommendations that work well together."""
 
 def main():
     # Initialize the recommender with your API key
-    api_key = "AIzaSyBpRah5mKs45mEOIpGoFTKMQjHtgfIVD7g"
+    # Make sure to set your GOOGLE_API_KEY in your environment
+    load_dotenv()
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise ValueError("GOOGLE_API_KEY not found in environment variables. Please set it in your .env file.")
     recommender = FashionRecommender(api_key)
 
     # Example product information
