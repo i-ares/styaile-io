@@ -1,0 +1,533 @@
+/* AI Fashion Assistant Content Script Styles */
+
+/* Floating Action Button */
+#ai-fashion-assistant-fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10000;
+  cursor: pointer;
+}
+
+.ai-fab-button {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: pulse 2s infinite;
+}
+
+.ai-fab-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 12px 35px rgba(139, 92, 246, 0.4);
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Main Menu */
+#ai-fashion-main-menu {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 350px;
+  max-width: calc(100vw - 40px);
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  z-index: 10001;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  opacity: 0;
+  transform: translateY(-20px) scale(0.95);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#ai-fashion-main-menu.ai-menu-show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.ai-menu-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #E5E7EB;
+  background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+  color: white;
+  border-radius: 16px 16px 0 0;
+}
+
+.ai-menu-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.ai-menu-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.ai-menu-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.ai-menu-content {
+  padding: 20px;
+}
+
+.ai-menu-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ai-menu-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+}
+
+.ai-menu-option:hover {
+  background: #F3F4F6;
+  border-color: #8B5CF6;
+  transform: translateY(-1px);
+}
+
+.ai-menu-option-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.ai-menu-option-content {
+  flex: 1;
+}
+
+.ai-menu-option-title {
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 2px;
+}
+
+.ai-menu-option-desc {
+  font-size: 12px;
+  color: #6B7280;
+  line-height: 1.3;
+}
+
+/* Complement Analysis Notification */
+.ai-complement-notification {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  max-width: 400px;
+  background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+  z-index: 10002;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  opacity: 0;
+  transform: translateX(-100%);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-complement-notification.ai-complement-notification-show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.ai-complement-notification-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+}
+
+.ai-complement-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.ai-complement-text {
+  flex: 1;
+}
+
+.ai-complement-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.ai-complement-subtitle {
+  font-size: 12px;
+  opacity: 0.9;
+  line-height: 1.3;
+}
+
+.ai-complement-view-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.ai-complement-view-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Recommendation Widget */
+#ai-fashion-assistant-widget,
+#ai-fashion-complement-widget {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 450px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 40px);
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  z-index: 10001;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  opacity: 0;
+  transform: translateY(-20px) scale(0.95);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#ai-fashion-assistant-widget.ai-widget-show,
+#ai-fashion-complement-widget.ai-widget-show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.ai-widget-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 700px;
+}
+
+.ai-widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #E5E7EB;
+  background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+  color: white;
+  border-radius: 16px 16px 0 0;
+}
+
+.ai-widget-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  flex: 1;
+}
+
+.ai-widget-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.ai-widget-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.ai-widget-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.ai-widget-current-product {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #F3E8FF 0%, #FCE7F3 100%);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.ai-widget-current-product img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.ai-widget-product-info h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1F2937;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.ai-widget-product-info p {
+  font-size: 16px;
+  font-weight: 700;
+  color: #8B5CF6;
+  margin: 0;
+}
+
+.ai-widget-complement-intro {
+  background: #F0F9FF;
+  border: 1px solid #BAE6FD;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.ai-widget-complement-intro p {
+  margin: 0;
+  font-size: 13px;
+  color: #0C4A6E;
+  line-height: 1.4;
+}
+
+.ai-widget-recommendations h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1F2937;
+  margin: 0 0 16px 0;
+}
+
+.ai-widget-recommendations-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.ai-widget-recommendation-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.ai-widget-recommendation-card:hover {
+  border-color: #8B5CF6;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.1);
+}
+
+.ai-complement-card {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  border-color: #F59E0B;
+}
+
+.ai-complement-card:hover {
+  border-color: #D97706;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+.ai-widget-recommendation-card img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.ai-widget-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-widget-card-content h5 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1F2937;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ai-widget-price {
+  font-size: 14px;
+  font-weight: 700;
+  color: #059669;
+  margin: 0 0 6px 0;
+}
+
+.ai-widget-scores {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.ai-widget-trend-score,
+.ai-widget-compatibility-score {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 12px;
+  background: #F3F4F6;
+  color: #374151;
+  font-weight: 500;
+}
+
+.ai-widget-reason {
+  font-size: 11px;
+  color: #6B7280;
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+}
+
+.ai-widget-styling-tip {
+  font-size: 11px;
+  color: #059669;
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+  background: #ECFDF5;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border-left: 3px solid #10B981;
+}
+
+.ai-widget-view-btn {
+  font-size: 11px;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: transform 0.2s;
+}
+
+.ai-widget-view-btn:hover {
+  transform: scale(1.05);
+}
+
+.ai-widget-footer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #E5E7EB;
+}
+
+.ai-widget-footer-text {
+  font-size: 11px;
+  color: #6B7280;
+  margin: 0;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Notification */
+.ai-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 10002;
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 300px;
+}
+
+.ai-notification.ai-notification-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ai-notification-info {
+  background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+}
+
+.ai-notification-error {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+}
+
+.ai-notification-success {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  #ai-fashion-assistant-widget,
+  #ai-fashion-complement-widget,
+  #ai-fashion-main-menu {
+    width: calc(100vw - 20px);
+    right: 10px;
+    top: 10px;
+  }
+  
+  #ai-fashion-assistant-fab {
+    bottom: 15px;
+    right: 15px;
+  }
+  
+  .ai-fab-button {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .ai-widget-content {
+    padding: 16px;
+  }
+  
+  .ai-widget-recommendations-grid {
+    gap: 12px;
+  }
+  
+  .ai-complement-notification {
+    left: 10px;
+    right: 10px;
+    max-width: none;
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "manifest_version": 3,
+  "name": "AI Fashion Assistant",
+  "version": "1.0.0",
+  "description": "AI-powered personal shopping assistant for Flipkart, Amazon India, and Myntra",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://www.flipkart.com/*",
+    "*://www.amazon.in/*",
+    "*://www.myntra.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://www.flipkart.com/*",
+        "*://www.amazon.in/*",
+        "*://www.myntra.com/*"
+      ],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_end"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AI Fashion Assistant",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "widget.html",
+        "assets/*"
+      ],
+      "matches": [
+        "*://www.flipkart.com/*",
+        "*://www.amazon.in/*",
+        "*://www.myntra.com/*"
+      ]
+    }
+  ]
+}
