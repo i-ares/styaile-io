@@ -1,6 +1,7 @@
 # Styaile.io
 
-![Styaile.io Hero](https://i.imgur.com/example.png) 
+<img width="310" alt="image" src="https://github.com/user-attachments/assets/bbad0665-fb7f-424d-9c26-35b1071572eb" />
+
 
 ## Overview
 
@@ -10,7 +11,7 @@ Styaile.io is a sophisticated, AI-powered fashion recommendation platform design
 
 ## Features
 
-- **AI-Powered Recommendations**: Utilizes a Python backend to provide intelligent and personalized fashion recommendations.
+- **AI-Powered Recommendations**: Utilizes a Python backend to provide intelligent and personalized fashion recommendations using Generative AI for current and upcoming trends.
 - **Interactive Chat Interface**: A sleek, modal-based chat for receiving style advice and product suggestions.
 - **"Looks" Questionnaire**: A multi-step questionnaire to generate a curated, personalized outfit prompt.
 - **Elegant & Minimalist UI**: A fully responsive design inspired by high-fashion editorial layouts, featuring a custom "Streamster" font for branding and "Inter" for body text.
@@ -65,26 +66,13 @@ Follow these instructions to set up and run the project locally.
 - [Node.js](https://nodejs.org/) (v18 or later recommended)
 - [Python](https://www.python.org/) (v3.9 or later recommended) and `pip`
 
-### 1. Frontend Setup
-
-First, navigate to the project root and set up the React application.
-
-```bash
-# Install all the required npm packages
-npm install
-
-# Run the frontend development server
-npm run dev
-```
-The application should now be running on `http://localhost:5173` (or another port if 5173 is busy).
-
-### 2. Backend Setup
+### 1. Backend Setup
 
 Next, set up and run the Python backend service in a separate terminal.
 
 ```bash
-# Navigate to the backend directory
-cd python_ai_service
+# Navigate to the project directory
+cd styaile-io
 
 # Create a virtual environment
 python -m venv venv
@@ -99,9 +87,23 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Run the Flask server
-python run.py
+python server.py
 ```
 The backend API will be running on `http://localhost:5000`.
+
+### 2. Frontend Setup
+
+First, navigate to the project root and set up the React application.
+
+```bash
+# Install all the required npm packages
+npm install
+
+# Run the frontend development server
+npm run dev
+```
+The application should now be running on `http://localhost:3000` (or another port if 3000 is busy).
+
 
 ### 3. Chrome Extension Setup
 
