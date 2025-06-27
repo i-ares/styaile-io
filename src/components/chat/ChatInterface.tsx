@@ -95,7 +95,7 @@ export function ChatInterface({ initialUserMessage }: { initialUserMessage?: str
     setIsLoading(true);
     
     try {
-      const response = await fetch('http://127.0.0.1:5000/get_recommendations', {
+      const response = await fetch('/api/get_recommendations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

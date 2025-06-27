@@ -121,8 +121,8 @@ export class GoogleProductSearchService {
   };
 
   constructor() {
-    this.serperApiKey = import.meta.env.VITE_SERPER_API_KEY || '7589f2c005067873f9f1ab2235ec8aeb43567495';
-    this.hfApiKey = import.meta.env.VITE_HF_TOKEN || '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';
+    this.serperApiKey = import.meta.env.VITE_SERPER_API_KEY;
+    this.hfApiKey = import.meta.env.VITE_HF_TOKEN;
   }
 
   async searchGoogleProductsAPI(query: string): Promise<GoogleProductResult[]> {

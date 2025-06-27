@@ -38,7 +38,7 @@ def health_check():
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
     return response
 
-@app.route('/get_recommendations', methods=['POST', 'OPTIONS'])
+@app.route('/api/get_recommendations', methods=['POST', 'OPTIONS'])
 def get_recommendations():
     try:
         # Log the incoming request
@@ -89,7 +89,12 @@ def get_recommendations():
         response = jsonify({"success": False, "error": str(e)})
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response, 500
+    
+@app.route('/api/health')
+def health():
+    return jsonify({"status": "Backend is working"})
 
 if __name__ == '__main__':
     # Enable debug mode and allow external access
-    app.run(host='0.0.0.0', port=5001, debug=True) 
+    app.run(host='0.0.0.0', port=5000, debug=True) 
+    app.run()
