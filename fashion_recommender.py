@@ -69,7 +69,7 @@ Format your response in clear JSON structure like this example:
     ]
 }}
 
-Focus on practical, specific recommendations that work well together."""
+Respond ONLY with valid JSON. Do not include any explanation or extra text."""
 
     def get_recommendations(self, product_info):
         """Get fashion recommendations from the model."""
@@ -100,23 +100,47 @@ Focus on practical, specific recommendations that work well together."""
     def parse_recommendations(self, recommendations):
         """Parse and structure the recommendations."""
         try:
-            # Clean and structure the recommendations
             if not recommendations:
                 return None
 
-            # Extract JSON content
+            # Try to extract JSON content
             try:
                 import json
-                # Find JSON-like content between curly braces
                 start = recommendations.find('{')
                 end = recommendations.rfind('}') + 1
                 if start >= 0 and end > start:
                     json_content = recommendations[start:end]
-                    parsed = json.loads(json_content)
+                    try:
+                        parsed = json.loads(json_content)
+                    except json.JSONDecodeError as e:
+                        print("JSON decode error, trying to fix common issues...")
+                        # Try to fix common issues
+                        fixed = json_content.replace("'", '"').replace(',}', '}').replace(',]', ']')
+                        try:
+                            parsed = json.loads(fixed)
+                        except Exception as e2:
+                            print("Failed to fix JSON:", e2)
+                            print("Raw model output was:\n", recommendations)
+                            return {
+                                'complementary_items': [],
+                                'outfits': [],
+                                'occasions': [],
+                                'styling_tips': [
+                                    'Sorry, the AI could not generate a valid response. Please try rephrasing your query.'
+                                ]
+                            }
                 else:
-                    raise ValueError("No JSON content found")
-            except json.JSONDecodeError:
-                print("Error parsing JSON, falling back to text processing")
+                    print("No JSON content found in model output:\n", recommendations)
+                    return {
+                        'complementary_items': [],
+                        'outfits': [],
+                        'occasions': [],
+                        'styling_tips': [
+                            'Sorry, the AI could not generate a valid response. Please try rephrasing your query.'
+                        ]
+                    }
+            except Exception as e:
+                print("Error parsing JSON, falling back to text processing:", e)
                 return self._parse_text_recommendations(recommendations)
 
             # Validate and clean each section
@@ -127,7 +151,6 @@ Focus on practical, specific recommendations that work well together."""
                 'styling_tips': []
             }
 
-            # Process complementary items (limit to 3)
             if 'complementary_items' in parsed:
                 items = parsed['complementary_items']
                 result['complementary_items'] = [
@@ -135,34 +158,29 @@ Focus on practical, specific recommendations that work well together."""
                     if isinstance(item, str) and item.strip()
                 ]
 
-            # Process outfits (ensure 3 complete outfits)
             if 'outfits' in parsed:
                 outfits = parsed['outfits']
                 result['outfits'] = [
                     outfit.strip() for outfit in outfits
                     if isinstance(outfit, str) and outfit.strip()
                 ]
-                # Add default outfits if needed
                 while len(result['outfits']) < 3:
                     result['outfits'].append(
                         "Classic casual: Pair with a white t-shirt, denim jacket, and white sneakers"
                     )
 
-            # Process occasions (ensure 2-3 detailed suggestions)
             if 'occasions' in parsed:
                 occasions = parsed['occasions']
                 result['occasions'] = [
                     occasion.strip() for occasion in occasions
                     if isinstance(occasion, str) and occasion.strip()
                 ]
-                # Add default occasions if needed
                 if not result['occasions']:
                     result['occasions'] = [
                         "Perfect for casual office environments and weekend outings - versatile enough for both settings",
                         "Ideal for social gatherings and casual dates - strikes the right balance of style and comfort"
                     ]
 
-            # Process styling tips
             if 'styling_tips' in parsed:
                 tips = parsed['styling_tips']
                 result['styling_tips'] = [

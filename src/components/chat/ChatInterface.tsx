@@ -95,7 +95,7 @@ export function ChatInterface({ initialUserMessage }: { initialUserMessage?: str
     setIsLoading(true);
     
     try {
-      const response = await fetch('/api/get_recommendations', {
+      const response = await fetch('http://127.0.0.1:5000/get_recommendations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -293,63 +293,126 @@ export function ChatInterface({ initialUserMessage }: { initialUserMessage?: str
   return (
     <div className="flex flex-col h-[calc(100vh-12rem)]">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto p-8 space-y-8">
         <AnimatePresence>
-          {messages.map((message, index) => (
+          {messages.map((message) => (
             <motion.div
               key={message.id}
-              layout
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+              exit={{ opacity: 0, y: -30 }}
+              className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              {message.type === 'assistant' && (
-                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                  <Bot size={18} />
-                </div>
-              )}
-              <div className={`max-w-md lg:max-w-lg ${message.type === 'user' ? 'order-2' : ''}`}>
-                <div className={`
-                  px-4 py-3 rounded-2xl
-                  ${message.type === 'user' 
-                    ? 'bg-black text-white rounded-br-none' 
-                    : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-bl-none'
-                  }
-                `}>
-                  {message.content && <p className="text-sm">{message.content}</p>}
-                  {message.image && (
-                    <div className="mt-2">
-                      <img src={message.image} alt="uploaded content" className="max-w-xs rounded-lg" />
-                    </div>
-                  )}
-                  
-                  {message.recommendations && (
-                    <div className="mt-6">
-                      {(message.recommendations as any[]).map(card => (
-                        card.products ? <ProductGrid key={card.id} products={card.products} /> : null
-                      ))}
-                    </div>
-                  )}
-                  {message.advice && <AdviceCard advice={message.advice} />}
+              <div className={`max-w-4xl w-full ${
+                message.type === 'user' ? 'ml-auto' : 'mr-auto'
+              }`}>
+                <div className={`flex items-start space-x-4 ${
+                  message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+                }`}>
+                  {/* Avatar */}
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 ${
+                    message.type === 'user'
+                      ? 'bg-black text-white'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {message.type === 'user' ? (
+                      <User className="w-5 h-5" />
+                    ) : (
+                      <Bot className="w-5 h-5" />
+                    )}
+                  </div>
 
+                  {/* Content */}
+                  <div className="flex-1">
+                    {/* User message */}
+                    {message.type === 'user' && message.content && (
+                      <div className="bg-black text-white px-8 py-6 mb-6">
+                        {message.image && (
+                          <div className="mb-4">
+                            <img
+                              src={message.image}
+                              alt="Uploaded"
+                              className="max-w-full h-64 object-cover"
+                            />
+                          </div>
+                        )}
+                        <div className="text-sm font-light whitespace-pre-line leading-relaxed tracking-wide">
+                          {message.content}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Product Cards */}
+                    {message.recommendations && message.recommendations.length > 0 && (
+                      <div className="w-full">
+                        {message.recommendations.map((rec: any) => (
+                          rec.products && rec.products.length > 0 && (
+                            <div key={rec.id}>
+                              <div className="flex items-center space-x-3 mb-6">
+                                <Sparkles className="w-5 h-5 text-gray-600" />
+                                <span className="text-lg font-light tracking-wide text-black">
+                                  {rec.products.length} Products Found
+                                </span>
+                              </div>
+                              <ProductGrid products={rec.products} />
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    )}
+                    {/* Fashion Advice Card */}
+                    {message.advice && (
+                      <AdviceCard advice={message.advice} />
+                    )}
+                  </div>
                 </div>
-                <p className="text-xs text-gray-400 mt-1 px-2">{new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+
+                {/* Timestamp */}
+                <p className={`text-xs text-gray-500 mt-3 ${
+                  message.type === 'user' ? 'text-right' : 'text-left'
+                }`}>
+                  {message.timestamp.toLocaleTimeString([], { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })}
+                </p>
               </div>
-              {message.type === 'user' && (
-                <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white">
-                  <User size={18} />
-                </div>
-              )}
             </motion.div>
           ))}
         </AnimatePresence>
+
+        {/* Loading */}
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-start"
+          >
+            <div className="flex items-start space-x-4">
+              <div className="w-10 h-10 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center shadow-sm">
+                <Bot className="w-5 h-5" />
+              </div>
+              <div className="bg-white border border-gray-200 px-8 py-6">
+                <div className="flex items-center space-x-3">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                  </div>
+                  <span className="text-sm font-light text-gray-600 tracking-wide">
+                    {isSearching ? 'Searching for products...' : 'Processing...'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
+      <div className="border-t border-gray-200 p-8">
         <div className="flex items-center space-x-4">
           <input
             ref={fileInputRef}

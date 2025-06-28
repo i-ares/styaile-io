@@ -66,7 +66,7 @@ export class PythonAIService {
 
       console.log('🤖 Getting AI recommendations from Python service...');
       
-      const response = await this.makeRequest('/api/recommendations', {
+      const response = await this.makeRequest('/api/get_recommendations', {
         preferences: userPreferences,
         currentProduct,
         context
